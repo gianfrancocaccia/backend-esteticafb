@@ -15,7 +15,8 @@ const app = express();
 app.use(
   cors({
     origin: process.env.FRONT_URL,
-    methods: ["GET", "POST", "OPTIONS"]
+    methods: ["GET", "POST", "OPTIONS"],
+    allowedHeaders: ["Content-Type"]  // ← esto faltaba
   })
 );
 
