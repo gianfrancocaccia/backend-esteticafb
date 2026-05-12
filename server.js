@@ -11,13 +11,7 @@ dotenv.config();
 
 const app = express();
 
-app.use(
-  cors({
-    origin: process.env.FRONT_URL,
-    methods: ["GET", "POST", "OPTIONS"],
-    credentials: true
-  })
-);
+app.use(cors());
 
 app.use(express.json());
 
@@ -41,8 +35,7 @@ app.post(
 
             items: [
               {
-                title:
-                  req.body.title,
+                title: req.body.title,
 
                 quantity: 1,
 
@@ -56,13 +49,7 @@ app.post(
             back_urls: {
 
               success:
-`${process.env.FRONT_URL}/gracias`,
-
-              failure:
-`${process.env.FRONT_URL}/error`,
-
-              pending:
-`${process.env.FRONT_URL}/pendiente`
+`${process.env.FRONT_URL}/gracias`
 
             },
 
@@ -87,10 +74,8 @@ app.post(
       console.log(error);
 
       res.status(500).json({
-
         error:
           "Error creando preferencia"
-
       });
 
     }
