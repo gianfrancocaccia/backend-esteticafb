@@ -1,22 +1,17 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-
-import {
-  MercadoPagoConfig,
-  Preference
-} from "mercadopago";
+import { MercadoPagoConfig, Preference } from "mercadopago";
 
 dotenv.config();
 
 const app = express();
 
-// 🔹 CORS configurado solo para tu frontend Vercel
+// CORS para tu frontend
 app.use(
   cors({
     origin: process.env.FRONT_URL,
-    methods: ["GET", "POST", "OPTIONS"],
-    allowedHeaders: ["Content-Type"]  // ← esto faltaba
+    methods: ["GET","POST","OPTIONS"]
   })
 );
 
@@ -28,22 +23,22 @@ const client = new MercadoPagoConfig({
 
 app.post("/create_preference", async (req, res) => {
   try {
+    const { title, price, sucursal } = req.body;
+
     const preference = new Preference(client);
 
     const response = await preference.create({
       body: {
         items: [
           {
-            title: req.body.title,
+            title,
             quantity: 1,
-            unit_price: Number(req.body.price),
+            unit_price: Number(price),
             currency_id: "ARS"
           }
         ],
         back_urls: {
-          success: `${process.env.FRONT_URL}/gracias`,
-          failure: `${process.env.FRONT_URL}/error`,
-          pending: `${process.env.FRONT_URL}/pendiente`
+          success: `${process.env.FRONT_URL}/gracias?tratamiento=${encodeURIComponent(title)}&sucursal=${encodeURIComponent(sucursal)}`
         },
         auto_return: "approved"
       }
@@ -53,6 +48,7 @@ app.post("/create_preference", async (req, res) => {
       id: response.id,
       init_point: response.init_point
     });
+
   } catch (error) {
     console.log(error);
     res.status(500).json({ error: "Error creando preferencia" });
@@ -60,6 +56,7 @@ app.post("/create_preference", async (req, res) => {
 });
 
 const PORT = process.env.PORT || 3000;
+
 app.listen(PORT, () => {
-  console.log(`Servidor corriendo en puerto ${PORT}`);
+  console.log(`✅Servidor corriendo en puerto ${PORT}`);
 });
