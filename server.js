@@ -1,62 +1,128 @@
 import express from "express";
 import cors from "cors";
 import dotenv from "dotenv";
-import { MercadoPagoConfig, Preference } from "mercadopago";
+
+import UalaApiCheckout from "ualabis-nodejs";
 
 dotenv.config();
 
 const app = express();
 
-// CORS para tu frontend
+const allowedOrigins = [
+
+  "http://localhost:5173",
+
+  "https://esteticsafb-reac.vercel.app"
+
+];
+
 app.use(
   cors({
-    origin: process.env.FRONT_URL,
-    methods: ["GET","POST","OPTIONS"]
+
+    origin: function (origin, callback) {
+
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (
+        allowedOrigins.includes(origin)
+      ) {
+
+        return callback(null, true);
+
+      }
+
+      return callback(
+        new Error("CORS no permitido")
+      );
+
+    }
+
   })
 );
 
 app.use(express.json());
 
-const client = new MercadoPagoConfig({
-  accessToken: process.env.MP_ACCESS_TOKEN
+await UalaApiCheckout.setUp({
+
+  userName:
+    process.env.UALA_USERNAME,
+
+  clientId:
+    process.env.UALA_CLIENT_ID,
+
+  clientSecret:
+    process.env.UALA_CLIENT_SECRET,
+
+  isDev: false
+
 });
 
-app.post("/create_preference", async (req, res) => {
-  try {
-    const { title, price, sucursal } = req.body;
+app.post(
+  "/create_preference",
+  async (req, res) => {
 
-    const preference = new Preference(client);
+    try {
 
-    const response = await preference.create({
-      body: {
-        items: [
-          {
-            title,
-            quantity: 1,
-            unit_price: Number(price),
-            currency_id: "ARS"
-          }
-        ],
-        back_urls: {
-          success: `${process.env.FRONT_URL}/gracias?tratamiento=${encodeURIComponent(title)}&sucursal=${encodeURIComponent(sucursal)}`
-        },
-        auto_return: "approved"
-      }
-    });
+      const {
+        title,
+        price,
+        sucursal
+      } = req.body;
 
-    res.json({
-      id: response.id,
-      init_point: response.init_point
-    });
+      const order =
+  await UalaApiCheckout.createOrder({
 
-  } catch (error) {
-    console.log(error);
-    res.status(500).json({ error: "Error creando preferencia" });
+    amount:
+      Number(price),
+
+    description:
+      `${title} - ${sucursal}`,
+
+    callbackSuccess:
+`${process.env.FRONT_URL}/gracias?tratamiento=${encodeURIComponent(title)}&sucursal=${encodeURIComponent(sucursal)}`,
+
+    callbackFail:
+`${process.env.FRONT_URL}/error`
+
+  });
+
+console.log(
+  JSON.stringify(order, null, 2)
+);
+
+res.json({
+
+  init_point:
+    order.links.checkoutLink
+
+});
+
+
+    } catch (error) {
+
+      console.log(error);
+
+      res.status(500).json({
+
+        error:
+          "Error creando pago"
+
+      });
+
+    }
+
   }
-});
+);
 
-const PORT = process.env.PORT || 3000;
+const PORT =
+  process.env.PORT || 3000;
 
 app.listen(PORT, () => {
-  console.log(`✅Servidor corriendo en puerto ${PORT}`);
+
+  console.log(
+    `Servidor corriendo en puerto ${PORT}`
+  );
+
 });
