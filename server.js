@@ -12,7 +12,8 @@ const allowedOrigins = [
 
   "http://localhost:5173",
 
-  "https://esteticsafb-reac.vercel.app"
+  "https://esteticafb.com",
+  "https://www.esteticafb.com"
 
 ];
 
