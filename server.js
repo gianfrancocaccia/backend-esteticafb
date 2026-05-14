@@ -11,7 +11,7 @@ const app = express();
 const allowedOrigins = [
 
   "http://localhost:5173",
-
+ "https://esteticafbx.netlify.app",
   "https://esteticafb.com",
   "https://www.esteticafb.com"
 
