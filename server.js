@@ -9,44 +9,57 @@ dotenv.config();
 const app = express();
 
 const allowedOrigins = [
-
   "http://localhost:5173",
- "https://esteticafbx.netlify.app",
   "https://esteticafb.com",
-  "https://www.esteticafb.com"
-
+  "https://www.esteticafb.com",
+  "https://esteticsafb-react.pages.dev"
 ];
 
 app.use(
   cors({
-
     origin: function (origin, callback) {
 
+      console.log("Origin:", origin);
+
+      // permitir requests sin origin
       if (!origin) {
         return callback(null, true);
       }
 
-      if (
-        allowedOrigins.includes(origin)
-      ) {
-
+     
+      if (allowedOrigins.includes(origin)) {
         return callback(null, true);
-
       }
 
+  
       return callback(
         new Error("CORS no permitido")
       );
+    },
 
-    }
+    methods: [
+      "GET",
+      "POST",
+      "PUT",
+      "DELETE",
+      "OPTIONS"
+    ],
 
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization"
+    ],
+
+    credentials: true
   })
 );
+
+// importante para preflight
+app.options("*", cors());
 
 app.use(express.json());
 
 await UalaApiCheckout.setUp({
-
   userName:
     process.env.UALA_USERNAME,
 
@@ -57,7 +70,6 @@ await UalaApiCheckout.setUp({
     process.env.UALA_CLIENT_SECRET,
 
   isDev: false
-
 });
 
 app.post(
@@ -73,43 +85,38 @@ app.post(
       } = req.body;
 
       const order =
-  await UalaApiCheckout.createOrder({
+        await UalaApiCheckout.createOrder({
 
-    amount:
-      Number(price),
+          amount:
+            Number(price),
 
-    description:
-      `${title} - ${sucursal}`,
+          description:
+            `${title} - ${sucursal}`,
 
-    callbackSuccess:
+          callbackSuccess:
 `${process.env.FRONT_URL}/gracias?tratamiento=${encodeURIComponent(title)}&sucursal=${encodeURIComponent(sucursal)}`,
 
-    callbackFail:
+          callbackFail:
 `${process.env.FRONT_URL}/error`
 
-  });
+        });
 
-console.log(
-  JSON.stringify(order, null, 2)
-);
+      console.log(
+        JSON.stringify(order, null, 2)
+      );
 
-res.json({
-
-  init_point:
-    order.links.checkoutLink
-
-});
-
+      res.json({
+        init_point:
+          order.links.checkoutLink
+      });
 
     } catch (error) {
 
       console.log(error);
 
       res.status(500).json({
-
         error:
           "Error creando pago"
-
       });
 
     }
@@ -126,4 +133,5 @@ app.listen(PORT, () => {
     `Servidor corriendo en puerto ${PORT}`
   );
 
+});
 });
