@@ -26,12 +26,10 @@ app.use(
         return callback(null, true);
       }
 
-     
       if (allowedOrigins.includes(origin)) {
         return callback(null, true);
       }
 
-  
       return callback(
         new Error("CORS no permitido")
       );
@@ -53,9 +51,6 @@ app.use(
     credentials: true
   })
 );
-
-// importante para preflight
-app.options("*", cors());
 
 app.use(express.json());
 
